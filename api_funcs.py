@@ -18,13 +18,13 @@ def request_smhi_api():
 
     Returns:
         A list of weather data in the form of lists, each sublist having the following order:
-            0. 'created': Creation timestamp ('YYYY-MM-DD hh:mm').
+            0. 'fetched': Timestamp when the data was fetched ('YYYY-MM-DD hh:mm').
             1. 'longitude': Longitude (in decimal degrees).
             2. 'latitude': Latitude (in decimal degrees).
             3. 'date': Date ('YYYY-MM-DD').
             4. 'hour': Hour (0-23).
             5. 'temperature': Temperature (in °C).
-            6. 'precipitation': True/False.
+            6. 'precipitation',
             7. 'provider': Data provider ('SMHI').
 
     Raises:

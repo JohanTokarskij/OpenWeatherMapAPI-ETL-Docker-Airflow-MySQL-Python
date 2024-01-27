@@ -17,7 +17,8 @@ def initiate_databases_and_tables():
                 connect.select_db('weather_db')
                 cursor.execute("""CREATE TABLE IF NOT EXISTS weather_data(
                                fetched VARCHAR(100),
-                               location VARCHAR(255),
+                               longitude FLOAT,
+                               latitude FLOAT,
                                date DATE,
                                hour VARCHAR(10),
                                temperature INT(3),
