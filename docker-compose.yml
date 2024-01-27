@@ -13,11 +13,13 @@ services:
       - AIRFLOW__WEBSERVER__SECRET_KEY=super_secret_key
       - _AIRFLOW_WWW_USER_USERNAME=admin
       - _AIRFLOW_WWW_USER_PASSWORD=password
+      - PYTHONPATH=/opt/airflow/project
     depends_on:
       - mysql
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
+      - .:/opt/airflow/project
     command: airflow webserver
 
   airflow-scheduler:
@@ -28,9 +30,11 @@ services:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=mysql+mysqlconnector://root:password@mysql:3306/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - PYTHONPATH=/opt/airflow/project
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
+      - .:/opt/airflow/project
     depends_on:
       - mysql
     command: airflow scheduler

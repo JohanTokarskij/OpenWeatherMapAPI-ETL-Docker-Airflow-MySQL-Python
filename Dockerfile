@@ -1,6 +1,6 @@
 FROM apache/airflow:latest
 
-WORKDIR /opt/airflow
+#WORKDIR /opt/airflow
 
 COPY requirements.txt .
 

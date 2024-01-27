@@ -1,4 +1,4 @@
 requests
 pymysql
-dotenv
+python-dotenv
 geopy

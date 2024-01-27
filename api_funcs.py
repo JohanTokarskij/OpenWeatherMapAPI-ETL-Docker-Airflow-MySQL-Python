@@ -4,7 +4,8 @@ import requests
 from dotenv import load_dotenv
 from geopy.geocoders import Nominatim
 
-
+lon = 18.0215
+lat = 59.3099
 
 def get_coordinates():
     geolocator = Nominatim(user_agent="GeocodingApp")
@@ -142,7 +143,7 @@ def request_owm_data(latitude, longitude, location):
                     formatted_rounded_start_time = rounded_start_time.strftime(
                         format_string)
                     break
-
+        print(data)
         return data
     except requests.RequestException as e:
         raise Exception(f'Error during API request: {e}')
@@ -151,5 +152,5 @@ def request_owm_data(latitude, longitude, location):
         raise Exception(f'An error occurred: {e}')
 
 
-latitude, longitude, location = get_coordinates()
-print(request_owm_data(latitude, longitude, location))
+#latitude, longitude, location = get_coordinates()
+request_owm_data(lat, lon, 'test')
