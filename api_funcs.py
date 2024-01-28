@@ -143,7 +143,6 @@ def request_owm_data(latitude, longitude, location):
                     formatted_rounded_start_time = rounded_start_time.strftime(
                         format_string)
                     break
-        print(data)
         return data
     except requests.RequestException as e:
         raise Exception(f'Error during API request: {e}')

@@ -1,5 +1,4 @@
 import pymysql
-import subprocess
 
 
 def initiate_databases_and_tables():
