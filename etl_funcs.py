@@ -78,13 +78,13 @@ def transform_owm_data(data, latitude, longitude):
                     date, hour = formatted_rounded_start_time.split(' ')
                     temperature = float(observation['temp'])
                     humidity = observation['humidity']
-                    condition = observation['weather'][0]['main'].lower()
+                    weather_condition = observation['weather'][0]['main'].lower()
                     precipitation_mm = 0 
 
-                    if condition in observation and isinstance(observation[condition], dict):
-                        precipitation_mm = observation[condition].get('1h', 0)
+                    if weather_condition in observation and isinstance(observation[weather_condition], dict):
+                        precipitation_mm = observation[weather_condition].get('1h', 0)
 
-                    transformed_data.append([fetched, latitude, longitude, date, hour, temperature, humidity, condition, precipitation_mm])
+                    transformed_data.append([latitude, longitude, fetched, date, hour, temperature, humidity, weather_condition, precipitation_mm])
 
                     rounded_start_time += datetime.timedelta(hours=1)
                     formatted_rounded_start_time = rounded_start_time.strftime(
