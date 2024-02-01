@@ -3,6 +3,7 @@ import os
 import requests
 from dotenv import load_dotenv
 from helper_funcs import get_coordinates
+from pymysql_funcs import create_location_table
 
 
 lat = 59.3099
@@ -99,18 +100,19 @@ def transform_owm_data(data, latitude, longitude):
     except Exception as e:
         raise Exception(f"An error occurred during data transformation: {e}")
 
-def load_data_to_sql(transformed_data, location):
+def load_data_to_sql(location, transformed_data):
     print(location)
     print(transformed_data)
+    
 
 
-
-def etl(latitude, longitude, location):
+def etl(location, latitude, longitude):
     data = extract_owm_data(latitude, longitude)
-    transformed_data = transform_owm_data(data, latitude, longitude)
-    load_data_to_sql(transformed_data, location)
+    if data:
+        transformed_data = transform_owm_data(data, latitude, longitude)
+        load_data_to_sql(location, transformed_data)
+        create_location_table(location, latitude, longitude )
 
 
-while True:
-    dynamic_latitude, dymanic_logitude, dynamic_location = get_coordinates()
-    etl(dynamic_latitude, dymanic_logitude, dynamic_location)
+dynamic_location, dynamic_latitude, dymanic_logitude  = get_coordinates()
+etl(dynamic_location, dynamic_latitude, dymanic_logitude)

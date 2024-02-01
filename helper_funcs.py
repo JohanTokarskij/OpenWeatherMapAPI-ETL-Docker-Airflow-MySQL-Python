@@ -34,7 +34,8 @@ def get_coordinates():
 
             if location:
                 latitude, longitude = location.latitude, location.longitude
-                return latitude, longitude, location[0].split(',')[0]
+                location = location[0].split(',')[0]
+                return location, latitude, longitude 
             else:
                 print('Geocoding failed. Check your input or try a different location.')
         except GeocoderTimedOut:
