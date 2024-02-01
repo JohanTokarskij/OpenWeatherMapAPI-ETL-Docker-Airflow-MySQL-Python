@@ -16,8 +16,8 @@ def initiate_databases_and_tables():
                 cursor.execute("""CREATE TABLE IF NOT EXISTS _location_id_table(
                                     location_id INT AUTO_INCREMENT PRIMARY KEY,
                                     location VARCHAR(100),
-                                    latitude FLOAT,
-                                    longitude FLOAT
+                                    latitude DECIMAL(10, 7),
+                                    longitude DECIMAL(10, 7)
                                 )""")
                 
             connect.commit()

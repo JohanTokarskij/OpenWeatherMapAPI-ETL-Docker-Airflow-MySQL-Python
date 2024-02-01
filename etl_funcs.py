@@ -3,7 +3,7 @@ import os
 import requests
 from dotenv import load_dotenv
 from helper_funcs import get_coordinates
-from pymysql_funcs import create_location_table
+from pymysql_funcs import establish_mysql_connection, create_location_table, insert_transformed_data
 
 
 lat = 59.3099
@@ -76,14 +76,15 @@ def transform_owm_data(data, latitude, longitude):
 
                 if formatted_rounded_start_time == formatted_dt_object:
                     fetched = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-                    date, hour = formatted_rounded_start_time.split(' ')
-                    temperature = float(observation['temp'])
-                    humidity = observation['humidity']
+                    date_str, hour = formatted_rounded_start_time.split(' ')
+                    date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+                    temperature = round(float(observation['temp']), 1)
+                    humidity = int(observation['humidity'])
                     weather_condition = observation['weather'][0]['main'].lower()
-                    precipitation_mm = 0 
+                    precipitation_mm = round(float(0), 1)
 
                     if weather_condition in observation and isinstance(observation[weather_condition], dict):
-                        precipitation_mm = observation[weather_condition].get('1h', 0)
+                        precipitation_mm = round(observation[weather_condition].get('1h', 0), 1)
 
                     transformed_data.append([latitude, longitude, fetched, date, hour, temperature, humidity, weather_condition, precipitation_mm])
 
@@ -100,19 +101,29 @@ def transform_owm_data(data, latitude, longitude):
     except Exception as e:
         raise Exception(f"An error occurred during data transformation: {e}")
 
-def load_data_to_sql(location, transformed_data):
-    print(location)
+def load_data_to_sql(location, transformed_data, latitude, longitude):
     print(transformed_data)
+    connection = establish_mysql_connection('weather_db')
+    if connection:
+        create_location_table(location, latitude, longitude, connection)
+        insert_transformed_data(location, transformed_data, connection)
+        connection.close()
+        print('Connection closed.')
     
 
 
 def etl(location, latitude, longitude):
-    data = extract_owm_data(latitude, longitude)
-    if data:
-        transformed_data = transform_owm_data(data, latitude, longitude)
-        load_data_to_sql(location, transformed_data)
-        create_location_table(location, latitude, longitude )
+    try:
+        data = extract_owm_data(latitude, longitude)
+        if data:
+            transformed_data = transform_owm_data(data, latitude, longitude)
+            load_data_to_sql(location, transformed_data, latitude, longitude)
+    except:
+        pass   
+    finally:
+        pass
 
 
 dynamic_location, dynamic_latitude, dymanic_logitude  = get_coordinates()
 etl(dynamic_location, dynamic_latitude, dymanic_logitude)
+
