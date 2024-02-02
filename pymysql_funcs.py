@@ -38,24 +38,29 @@ def create_location_table(location, latitude, longitude, connection):
                 cursor.execute(
                     insert_query, (formated_table_name, latitude, longitude))
 
-            create_table_query = f"""CREATE TABLE IF NOT EXISTS {formated_table_name} (
-                                entry_id INT AUTO_INCREMENT PRIMARY KEY,
-                                location_id INT,
-                                fetched VARCHAR(100),
-                                date DATE,
-                                hour VARCHAR(10),
-                                temperature DECIMAL(3, 1),
-                                humidity INT,
-                                weather_condition VARCHAR(100),
-                                precipitation_mm DECIMAL(3, 1),
-                                FOREIGN KEY(location_id) REFERENCES _location_id_table(location_id))"""
-            cursor.execute(create_table_query)
-            connection.commit()
+                create_table_query = f"""CREATE TABLE IF NOT EXISTS {formated_table_name} (
+                                    entry_id INT AUTO_INCREMENT PRIMARY KEY,
+                                    location_id INT,
+                                    fetched VARCHAR(100),
+                                    date DATE,
+                                    hour VARCHAR(10),
+                                    temperature DECIMAL(3, 1),
+                                    humidity INT,
+                                    weather_condition VARCHAR(100),
+                                    precipitation_mm DECIMAL(3, 1),
+                                    FOREIGN KEY(location_id) REFERENCES _location_id_table(location_id))"""
+                cursor.execute(create_table_query)
+                connection.commit()
+                return f'New table created'
+            else:
+                return 'Table already exists'
     except pymysql.Error as e:
         print(f'\nError in create_location_table: {e}')
 
 
 def insert_transformed_data(location, transformed_data, connection):
+    changes_made = False 
+    message = 'No new data to insert; data is up-to-date'
     try:
         formated_table_name = location.replace(' ', '_')
         with connection.cursor() as cursor:
@@ -79,21 +84,31 @@ def insert_transformed_data(location, transformed_data, connection):
                                         (location_id, fetched, date, hour, temperature, humidity, weather_condition, precipitation_mm)
                                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
                     cursor.execute(insert_query, (location_id, fetched, date, hour, temperature, humidity, weather_condition, precipitation_mm))
+                    changes_made = True
+                    message = 'New data inserted'
                 else:
                     (date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result) = (result[0], result[1], float(result[2]), int(result[3]), result[4], float(result[5]))
                     if [date, hour, temperature, humidity, weather_condition, precipitation_mm] != [date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result]:
                         update_query = f"""UPDATE {formated_table_name}
                                         SET fetched = %s, temperature = %s, humidity = %s, weather_condition = %s, precipitation_mm = %s
                                         WHERE date = %s AND hour = %s"""
+                        changes_made = True
+                        message = 'Existing data updated'
 
                         cursor.execute(update_query, (fetched, temperature, humidity, weather_condition, precipitation_mm, date, hour))
                         logger.info(f'\nOutdated data from {formated_table_name}:')
                         logger.info([date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result])
                         logger.info(f'New data from requests for {formated_table_name}: \n{observation[3:]}')
 
-            connection.commit()
+            if changes_made:
+                connection.commit()
     except pymysql.Error as e:
         print(f'\nError in insert_transformed_data: {e}')
+        message = f"Database error occurred: {e}"
+    except Exception as e:
+        print(f'\nUnexpected error: {e}')
+        message = f"An unexpected error occurred: {e}"
+    return message
 
 
 def get_coordinates_from_db():
@@ -114,7 +129,7 @@ def remove_location_from_db(location_list):
         with establish_mysql_connection('weather_db') as connection:
             with connection.cursor() as cursor:
                 for location in location_list:
-                    delete_location_table = f"""DROP TABLE {location}"""
+                    delete_location_table = f"""DROP TABLE IF EXISTS {location}"""
                     cursor.execute(delete_location_table)
                     delete_location_id_query = """DELETE FROM _location_id_table
                                                 WHERE location = %s"""

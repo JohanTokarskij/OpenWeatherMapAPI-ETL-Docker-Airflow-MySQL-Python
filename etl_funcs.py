@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import pymysql
 import pytz
 from pymysql_funcs import establish_mysql_connection, create_location_table, insert_transformed_data, get_coordinates_from_db
-from helper_funcs import get_coordinates
 
 
 def extract_owm_data(latitude, longitude):
@@ -146,8 +145,14 @@ def etl(location, latitude, longitude, connection=None, manage_connection=True):
         data = extract_owm_data(latitude, longitude)
         if data:
             transformed_data = transform_owm_data(data, latitude, longitude)
-            load_data_to_sql(location, transformed_data, latitude, longitude, connection)
-            print(transformed_data)
+            table_status = create_location_table(location, latitude, longitude, connection)
+            data_status = insert_transformed_data(location, transformed_data, connection)
+            if "New table created" in table_status:
+                print(f'\n{table_status}')
+            if "New data inserted" in data_status or "Existing data updated" in data_status:
+                print(f'\n{data_status} for "{location}".')
+            elif "No new data to insert" in data_status:
+                print(f'\n{data_status} for "{location}".')
             return True
         else:
             return False

@@ -25,9 +25,7 @@ def main_manu():
             if coordinates:
                 location, latitude, longitude = coordinates
                 etl_result = etl(location, latitude, longitude)
-                if etl_result:
-                    print(f'\nSuccess! New data for "{location}" has been added to the database and scheduled in Airflow.')
-                else:
+                if not etl_result:
                     print('Something went wrong, new data was not added.')
 
                 wait_for_keypress()
