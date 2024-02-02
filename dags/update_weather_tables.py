@@ -4,10 +4,12 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 import pendulum
 
+local_tz = pendulum.timezone('Europe/Stockholm')
+
 default_args= {
     'ownner': 'Johan Tokarskij',
     'depends_on_past': False,
-    'start_date': pendulum.datetime(2024, 1, 1, 0, 0, tz='Europe/Stockholm'),
+    'start_date': pendulum.datetime(2024, 1, 1, 0, 0, tz=local_tz),
     'retries':2,
     'retry_delay': timedelta(minutes=1)
 }

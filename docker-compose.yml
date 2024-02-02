@@ -15,6 +15,7 @@ services:
       - _AIRFLOW_WWW_USER_PASSWORD=password
       - PYTHONPATH=/opt/airflow/project
       - MYSQL_HOST=mysql
+      - TZ=Europe/Stockholm
     depends_on:
       - mysql
     volumes:
@@ -33,6 +34,7 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - PYTHONPATH=/opt/airflow/project
       - MYSQL_HOST=mysql
+      - TZ=Europe/Stockholm
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs

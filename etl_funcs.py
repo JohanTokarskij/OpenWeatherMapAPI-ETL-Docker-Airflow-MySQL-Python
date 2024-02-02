@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import pymysql
 import pytz
 from pymysql_funcs import establish_mysql_connection, create_location_table, insert_transformed_data, get_coordinates_from_db
+from helper_funcs import get_coordinates
 
 
 def extract_owm_data(latitude, longitude):
@@ -82,7 +83,7 @@ def transform_owm_data(data, latitude, longitude):
 
         for _ in range(24):
             for observation in data['hourly']:
-                dt_object = datetime.datetime.fromtimestamp(observation['dt'])
+                dt_object = datetime.datetime.fromtimestamp(observation['dt'], pytz.utc).astimezone(timezone)
                 formatted_dt_object = dt_object.strftime('%Y-%m-%d %H:%M')
 
                 if formatted_rounded_start_time == formatted_dt_object:
@@ -146,6 +147,7 @@ def etl(location, latitude, longitude, connection=None, manage_connection=True):
         if data:
             transformed_data = transform_owm_data(data, latitude, longitude)
             load_data_to_sql(location, transformed_data, latitude, longitude, connection)
+            print(transformed_data)
             return True
         else:
             return False
@@ -170,7 +172,3 @@ def airflow_etl():
             connection.close()
     else:
         print('Failed to establish database connection.')
-
-
-
-
