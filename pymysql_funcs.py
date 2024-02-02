@@ -1,5 +1,9 @@
-import pymysql
 import os
+import logging
+import pymysql
+
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+logger = logging.getLogger()
 
 
 def establish_mysql_connection(database=None):
@@ -83,9 +87,9 @@ def insert_transformed_data(location, transformed_data, connection):
                                         WHERE date = %s AND hour = %s"""
 
                         cursor.execute(update_query, (fetched, temperature, humidity, weather_condition, precipitation_mm, date, hour))
-                        print('\nOutdated data from database:')
-                        print([date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result])
-                        print(f'New data from requests: \n{observation[3:]}')
+                        logger.info(f'\nOutdated data from {formated_table_name}:')
+                        logger.info([date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result])
+                        logger.info(f'New data from requests for {formated_table_name}: \n{observation[3:]}')
 
             connection.commit()
     except pymysql.Error as e:

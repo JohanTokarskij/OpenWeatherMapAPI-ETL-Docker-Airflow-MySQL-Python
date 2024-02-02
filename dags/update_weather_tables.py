@@ -1,12 +1,13 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from etl_funcs import airflow_etl
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
+import pendulum
 
 default_args= {
-    'ownder': 'Johan Tokarskij',
+    'ownner': 'Johan Tokarskij',
     'depends_on_past': False,
-    'start_date': datetime(2024, 1, 1, 0, 0),
+    'start_date': pendulum.datetime(2024, 1, 1, 0, 0, tz='Europe/Stockholm'),
     'retries':2,
     'retry_delay': timedelta(minutes=1)
 }
