@@ -3,6 +3,7 @@ import os
 import requests
 from dotenv import load_dotenv
 import pymysql
+import pytz
 from pymysql_funcs import establish_mysql_connection, create_location_table, insert_transformed_data, get_coordinates_from_db
 
 
@@ -72,8 +73,10 @@ def transform_owm_data(data, latitude, longitude):
     """
     try:
         transformed_data = []
-    
-        rounded_start_time = datetime.datetime.now() + datetime.timedelta(minutes=60 - datetime.datetime.now().minute)
+
+        timezone = pytz.timezone('Europe/Stockholm')
+        now = datetime.datetime.now(pytz.utc).astimezone(timezone)
+        rounded_start_time = now + datetime.timedelta(minutes = 60 - now.minute)
         format_string = "%Y-%m-%d %H:%M"
         formatted_rounded_start_time = rounded_start_time.strftime(format_string)
 
@@ -83,7 +86,7 @@ def transform_owm_data(data, latitude, longitude):
                 formatted_dt_object = dt_object.strftime('%Y-%m-%d %H:%M')
 
                 if formatted_rounded_start_time == formatted_dt_object:
-                    fetched = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+                    fetched = now.strftime('%Y-%m-%d %H:%M')
                     date_str, hour = formatted_rounded_start_time.split(' ')
                     date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
                     temperature = round(float(observation['temp']), 1)

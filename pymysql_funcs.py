@@ -4,6 +4,7 @@ import os
 
 def establish_mysql_connection(database=None):
     try:
+        # Diffenrent hosts for Docker and local enviroment
         host = os.getenv('MYSQL_HOST', 'localhost')
 
         connection = pymysql.connect(
@@ -100,5 +101,23 @@ def get_coordinates_from_db():
                 cursor.execute(search_query)
                 result = [list(row) for row in cursor.fetchall()]
                 return result
+    except pymysql.Error as e:
+        print(f'\nError in get_coordinates_from_db: {e}')
+
+
+def remove_location_from_db(location_list):
+    try:
+        with establish_mysql_connection('weather_db') as connection:
+            with connection.cursor() as cursor:
+                for location in location_list:
+                    delete_location_table = f"""DROP TABLE {location}"""
+                    cursor.execute(delete_location_table)
+                    delete_location_id_query = """DELETE FROM _location_id_table
+                                                WHERE location = %s"""
+                    cursor.execute(delete_location_id_query, (location,))
+
+                    print(f'{location} has been removed from the database')
+
+                connection.commit()
     except pymysql.Error as e:
         print(f'\nError in get_coordinates_from_db: {e}')
