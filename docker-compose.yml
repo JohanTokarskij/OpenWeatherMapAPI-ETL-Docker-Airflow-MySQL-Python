@@ -14,6 +14,7 @@ services:
       - _AIRFLOW_WWW_USER_USERNAME=admin
       - _AIRFLOW_WWW_USER_PASSWORD=password
       - PYTHONPATH=/opt/airflow/project
+      - MYSQL_HOST=mysql
     depends_on:
       - mysql
     volumes:
@@ -31,6 +32,7 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=mysql+mysqlconnector://root:password@mysql:3306/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - PYTHONPATH=/opt/airflow/project
+      - MYSQL_HOST=mysql
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs

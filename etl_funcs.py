@@ -2,12 +2,8 @@ import datetime
 import os
 import requests
 from dotenv import load_dotenv
-from helper_funcs import get_coordinates
-from pymysql_funcs import establish_mysql_connection, create_location_table, insert_transformed_data
-
-
-lat = 59.3099
-lon = 18.0215
+import pymysql
+from pymysql_funcs import establish_mysql_connection, create_location_table, insert_transformed_data, get_coordinates_from_db
 
 
 def extract_owm_data(latitude, longitude):
@@ -19,24 +15,36 @@ def extract_owm_data(latitude, longitude):
         longitude (float): The longitude of the location.
 
     Returns:
-        dict: A dictionary containing the raw weather data from OWM.
+        dict or None: A dictionary containing the raw weather data from OWM if the request is successful,
+                      None otherwise.
 
-    Raises:
-        ConnectionError: If there's a network problem or the API is unreachable.
-        HTTPError: If the API returns a non-200 HTTP status code.
+    
+    Note:
+        The function prints specific error messages for HTTP errors or other exceptions,
+        returning None for any failure.
     """
+
     try:
         load_dotenv()
         API_KEY = os.getenv('API_KEY')
 
         response = requests.get(f'https://api.openweathermap.org/data/3.0/onecall?lat={latitude}&lon={longitude}&appid={API_KEY}&units=metric&exclude=current,minutely,daily,alerts')
 
-        if response.status_code != 200:
-            raise Exception(f'Error fetching data: HTTP status code {response.status_code}')
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f'Failed to fetch data: HTTP status code {response.status_code}')
+            if response.status_code == 401:
+                print('Check if the API key is correct.')
+            elif response.status_code == 404:
+                print('Requested resource not found.')
+            
+            return None
     
-    except requests.RequestException as e:
-        raise Exception(f'Error during API request: {e}')
+    except Exception as e:
+        print(f'Unexpected error occurred: {e}')
+        return None
+
 
 def transform_owm_data(data, latitude, longitude):
     """
@@ -59,8 +67,8 @@ def transform_owm_data(data, latitude, longitude):
               - 'condition': Weather condition/precipitation.
               - 'precipitation_mm': Precipitation amount (in mm).
 
-    Raises:
-        ValueError: If the input data is not in the expected format or missing required information.
+    Note:
+        Errors are managed internally, printing messages for issues (e.g., missing keys, invalid types) without halting execution.
     """
     try:
         transformed_data = []
@@ -95,35 +103,71 @@ def transform_owm_data(data, latitude, longitude):
         return transformed_data
     
     except KeyError as ke:
-        raise ValueError(f"Missing or invalid key in input data: {ke}")
+        print(f'Missing or invalid key in input data: {ke}')
     except TypeError as te:
-        raise ValueError(f"Invalid data type in input: {te}")
+        print(f'Invalid data type in input: {te}')
     except Exception as e:
-        raise Exception(f"An error occurred during data transformation: {e}")
+        print(f'An error occurred during data transformation: {e}')
 
-def load_data_to_sql(location, transformed_data, latitude, longitude):
-    print(transformed_data)
-    connection = establish_mysql_connection('weather_db')
-    if connection:
-        create_location_table(location, latitude, longitude, connection)
-        insert_transformed_data(location, transformed_data, connection)
-        connection.close()
-        print('Connection closed.')
+
+def load_data_to_sql(location, transformed_data, latitude, longitude, connection):
+    try:
+        if connection:
+            create_location_table(location, latitude, longitude, connection)
+            insert_transformed_data(location, transformed_data, connection)  
+    except pymysql.Error as e:
+        print(f'Database error occurred: {e}')
+    except Exception as e:
+        print(f'An unexpected error occurred: {e}')
+
+
+def etl(location, latitude, longitude, connection=None, manage_connection=True):
+    """
+    Performs ETL process for a specific location.
+
+    Args:
+        location (str): Location name.
+        latitude (float): Latitude of the location.
+        longitude (float): Longitude of the location.
+        connection: Database connection object. If None, the function will create and manage its own connection.
+        manage_connection (bool): Indicates whether this function should manage the database connection (open/close) or leave it to the caller.
+
+    Returns:
+        bool: True if ETL process completes successfully, False otherwise.
+    """
+    if manage_connection:
+        connection = establish_mysql_connection('weather_db')
     
-
-
-def etl(location, latitude, longitude):
     try:
         data = extract_owm_data(latitude, longitude)
         if data:
             transformed_data = transform_owm_data(data, latitude, longitude)
-            load_data_to_sql(location, transformed_data, latitude, longitude)
-    except:
-        pass   
+            load_data_to_sql(location, transformed_data, latitude, longitude, connection)
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f'ETL process error for location {location}: {e}')
+        return False
     finally:
-        pass
+        if manage_connection and connection:
+            connection.close()
 
 
-dynamic_location, dynamic_latitude, dymanic_logitude  = get_coordinates()
-etl(dynamic_location, dynamic_latitude, dymanic_logitude)
+def airflow_etl():
+    connection = establish_mysql_connection('weather_db')
+    if connection:
+        try:
+            for observation in get_coordinates_from_db():
+                db_location, db_latitude, db_longitude = observation
+                etl(db_location, db_latitude, db_longitude, connection, manage_connection=False)
+        except Exception as e:
+            print(f'Error during ETL process: {e}')
+        finally:
+            connection.close()
+    else:
+        print('Failed to establish database connection.')
+
+
+
 
