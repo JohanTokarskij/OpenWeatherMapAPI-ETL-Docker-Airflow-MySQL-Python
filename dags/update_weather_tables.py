@@ -20,7 +20,8 @@ dag = DAG(
     description="""This DAG fetches new data every 15 minutes from OpenWeatherMap for each of the table in "weather_db" 
     and updates each table with the new data. """,
     schedule_interval=timedelta(minutes=15),
-    catchup=False
+    catchup=False,
+    max_active_runs=1
 )
 
 update_weather_tables_task = PythonOperator(
