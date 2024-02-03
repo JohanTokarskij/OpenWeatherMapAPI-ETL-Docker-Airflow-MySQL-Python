@@ -52,7 +52,9 @@ Follow the on-screen prompts to interact with the application. You can:
 
 ### Accessing the Data
 
-All fetched and transformed weather data is stored in the `weather_db` database, with a separate table for each location. This database is accessible via MySQL:
+All fetched and transformed weather data is stored in the `weather_db` database. Each location's data is stored in a distinct table named after the location. The `_location_id_table` is a key table in the database, uniquely mapping each location to its ID, name, and geographical coordinates (latitude and longitude).  
+
+The database is accessible via MySQL:
 
 - **Host**: `localhost`
 - **Port**: `3306`

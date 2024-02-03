@@ -48,7 +48,9 @@ def create_location_table(location, latitude, longitude, connection):
                                     humidity INT,
                                     weather_condition VARCHAR(100),
                                     precipitation_mm DECIMAL(3, 1),
-                                    FOREIGN KEY(location_id) REFERENCES _location_id_table(location_id))"""
+                                    FOREIGN KEY(location_id) REFERENCES _location_id_table(location_id),
+                                    UNIQUE (date, hour, temperature, humidity, weather_condition, precipitation_mm))
+                                    """
                 cursor.execute(create_table_query)
                 connection.commit()
                 return f'New table created'
@@ -83,9 +85,12 @@ def insert_transformed_data(location, transformed_data, connection):
                     insert_query = f"""INSERT INTO {formated_table_name}
                                         (location_id, fetched, date, hour, temperature, humidity, weather_condition, precipitation_mm)
                                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
-                    cursor.execute(insert_query, (location_id, fetched, date, hour, temperature, humidity, weather_condition, precipitation_mm))
-                    changes_made = True
-                    message = 'New data inserted'
+                    try:
+                        cursor.execute(insert_query, (location_id, fetched, date, hour, temperature, humidity, weather_condition, precipitation_mm))
+                        changes_made = True
+                        message = 'New data inserted'
+                    except pymysql.err.IntegrityError:
+                        continue
                 else:
                     (date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result) = (result[0], result[1], float(result[2]), int(result[3]), result[4], float(result[5]))
                     if [date, hour, temperature, humidity, weather_condition, precipitation_mm] != [date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result]:
@@ -96,9 +101,7 @@ def insert_transformed_data(location, transformed_data, connection):
                         message = 'Existing data updated'
 
                         cursor.execute(update_query, (fetched, temperature, humidity, weather_condition, precipitation_mm, date, hour))
-                        logger.info(f'\nOutdated data from {formated_table_name}:')
-                        logger.info([date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result])
-                        logger.info(f'New data from requests for {formated_table_name}: \n{observation[3:]}')
+                        logger.info(f"""\nOutdated data from {formated_table_name}: {[date_from_result, hour_from_result, temperature_from_result, humidity_from_result, weather_condition_from_result, precipitation_mm_from_result]}\nNew data from requests for {formated_table_name}: {observation[3:]}""")
 
             if changes_made:
                 connection.commit()
