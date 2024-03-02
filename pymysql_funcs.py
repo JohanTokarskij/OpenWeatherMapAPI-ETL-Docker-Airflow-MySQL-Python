@@ -53,7 +53,7 @@ def create_location_table(location, latitude, longitude, connection):
                                     """
                 cursor.execute(create_table_query)
                 connection.commit()
-                return f'New table created'
+                return 'New table created'
             else:
                 return 'Table already exists'
     except pymysql.Error as e:
@@ -107,10 +107,10 @@ def insert_transformed_data(location, transformed_data, connection):
                 connection.commit()
     except pymysql.Error as e:
         print(f'\nError in insert_transformed_data: {e}')
-        message = f"Database error occurred: {e}"
+        message = f'Database error occurred: {e}'
     except Exception as e:
         print(f'\nUnexpected error: {e}')
-        message = f"An unexpected error occurred: {e}"
+        message = f'An unexpected error occurred: {e}'
     return message
 
 

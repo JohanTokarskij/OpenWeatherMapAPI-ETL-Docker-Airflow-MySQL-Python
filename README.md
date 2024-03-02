@@ -4,6 +4,10 @@
 
 This project automates the extraction, transformation, and loading (ETL) process of weather data from the OpenWeatherMap API into a MySQL database using Python, leveraging Apache Airflow for the scheduling of data fetches and Docker for orchestration. Designed to retrieve weather updates for user-configured locations at regular intervals, it processes the data into a structured format and updates a MySQL database every 15 minutes with updated weather forecast for 24 hours ahead. This project integrates a user-friendly interface through the `questionary` Python module, abstracting a technical side of the implementation. By incorporating modern technologies and practices such as Docker, Apache Airflow, and programmatic MySQL access, the project stands as a robust example of practical ETL processes in the field of data engineering.
 
+## Flow Chart
+![Flow chart](documentation_images/flow-chart.png)
+
+
 ## Features
 - Automated weather data fetch from OpenWeatherMap API.
 - Data transformation and normalization for database storage.
@@ -30,8 +34,8 @@ This project automates the extraction, transformation, and loading (ETL) process
 - Activate the virtual environment: `venv\Scripts\activate` on Windows or `source venv/bin/activate` on Linux/macOS
 4. Install the required dependencies: `pip install -r requirements.txt`
 5. Run `docker-compose up -d` in terminal to download and start the containers.
-6. Run `python setup_mysql.py` to set up MySQL.
-7. Run `python setup_airflow.py` to set up Apache Airflow.
+6. Run `python setup_mysql.py` to set up MySQL. Proceed to the next step after getting confirmatinon 'Initialization of MySQL is complete'.
+7. Run `python setup_airflow.py` to set up Apache Airflow. After getting confirmation **'Initialization of airflow-webserver is complete'** and **'Initialization of airflow-webscheduler is complete'** the initial setup is done.
 
 ### To schedule Airflow logging:
 1. Navigate to `http://localhost:8080/`.
