@@ -9,8 +9,10 @@ def initiate_databases_and_tables(retries=5):
             print(f'Initializing databases and tables, Attempt: {attempt + 1}')
             with establish_mysql_connection() as connect:
                 with connect.cursor() as cursor:
-                    # Creating a database for Airflow
+                    # Creating a database and admin account for Airflow
                     cursor.execute('CREATE DATABASE IF NOT EXISTS airflow')
+                    cursor.execute('CREATE USER "admin" IDENTIFIED BY "password"')
+                    cursor.execute('GRANT ALL PRIVILEGES ON airflow_db.* TO "admin"')
 
                     cursor.execute('CREATE DATABASE IF NOT EXISTS weather_db')
                     
